@@ -1,0 +1,50 @@
+syntax = "proto2";
+
+message BleParam {
+    optional float  bleInterval = 1;
+    optional sint32 bleTxp = 2;
+    optional uint32 bleOnTime = 3;
+    optional uint32 bleOffTime = 4;
+    optional uint32 bleOnOff = 5;
+}
+
+message iBeacon{
+    optional bytes uuid = 1;
+    optional uint32 major = 2;
+    optional uint32 minor = 3;
+    optional sint32 mrssi = 4;
+}
+
+enum AppCmd {
+    APP_CMD_NONE = 0;
+    APP_CMD_RESET = 1;
+    APP_CMD_FAC_RESET = 2;
+    APP_CMD_DFU = 3;
+}
+
+message AppParam {
+    optional AppCmd cmd = 1;
+}
+
+
+message MsgNode {
+    optional uint32 id = 1;
+    optional uint32 cmd = 2;
+    optional uint32 cmdRet = 3;
+
+    optional BleParam bleParam = 5;
+    optional AppParam appParam = 6;
+    optional iBeacon  ibeacon = 38;
+
+
+    optional uint32     appBleFnt = 200;                //一次广播次数
+    optional uint32     appLowPowerLevel = 201;         //低电压阈值 uint: mV
+
+}
+
+
+
+
+
+
+

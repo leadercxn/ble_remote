@@ -1,0 +1,81 @@
+/*            
+ 提供如下变量可直接使用:            
+ app              : Object, iot 平台需要的字段             
+ lora             : Object, lora 平台需要的字段             
+ config           : Object, 最终的配置结果放入此字段内即可完成配置             
+ defaultConfig    : Object, 默认字段集            
+ */ 
+
+ const DeviceType = {
+  NODE: 0,
+  MODULE: 1,
+  CHIP: 2,
+  CO: 3,
+  CO2: 4,
+  NO2: 5,
+  CH4: 6,
+  LPG: 7,
+  PM2_5: 8,
+  PM10: 9,
+  GPS: 10,
+  TEMP: 11,
+  HUMI: 12,
+  TRACKER: 13,
+  chip_s: 14,
+  chip_e: 15,
+  chip_l: 16,
+  tester: 17,
+  temp_humi_one: 18,
+  fhsj_ch4: 19,
+  fhsj_lpg: 20,
+  fhsj_elec_fires: 21,
+  fhsj_smoke: 22,
+  tk: 23,
+  concox_tracker: 24,
+  jf_connection: 25,
+  siter_lpg: 26,
+  mantun_fires: 27,
+  acrel_fires: 28,
+  taycan_smoke : 29,
+  bigbang_tracker : 30,
+  t1 : 31,
+  acrel_single : 32,
+  baymax_ch4 : 33,
+  baymax_lpg : 34,
+  sss_controller : 35,
+  jetfire_water_soak : 47,
+}
+
+//lora部分
+
+
+
+
+// app部分
+app.bleTxPower = 0 ;
+app.bleInterval = 32 ;	//20 ms的广播间隔
+
+config.appDeviceType = DeviceType.sss_remote;	//设备类型
+config.appSn = new Buffer(defaultConfig.sn, 'hex');
+config.appToken = new Buffer(defaultConfig.token);
+config.appHardwareversion = new Buffer(defaultConfig.hardwareVersion, 'hex');
+config.appSecureKey = new Buffer(app.secureKey, 'hex');
+config.appPassword = new Buffer(app.password);
+config.appInterval = app.interval;
+config.appBleOnTime = app.bleOnTime;
+config.appBleOffTime = app.bleOffTime;
+config.appBleTxPower = app.bleTxPower;
+config.appBleInterval = app.bleInterval;
+
+config.appBleFnt = 10;				//一次广播发送包数
+config.appLowPowerLevel = 2600;		//低电压阈值
+
+// 云端所需参数填充
+config.app = app;
+config.lora = lora;
+
+
+
+
+
+

@@ -1,0 +1,103 @@
+syntax = "proto2";
+package fac;
+
+enum DeviceType {
+    NODE = 0;
+    MODULE = 1;
+    CHIP = 2;
+    CO = 3;
+    CO2 = 4;
+    NO2 = 5;
+    CH4 = 6;
+    LPG = 7;
+    PM2_5 = 8;
+    PM10 = 9;
+    GPS = 10;
+    TEMP = 11;
+    HUMI = 12;
+    TRACKER = 13;
+    chip_s = 14;
+    chip_e = 15;
+    chip_l = 16;
+    tester = 17;
+    temp_humi_one = 18;
+    fhsj_ch4 = 19;
+    fhsj_lpg = 20;
+    fhsj_elec_fires = 21;
+    fhsj_smoke = 22;
+    tk = 23;
+    concox_tracker = 24;
+    jf_connection = 25;
+    siter_lpg = 26;
+    mantun_fires = 27;
+    acrel_fires = 28;
+    taycan_smoke = 29;
+    bigbang_tracker = 30;
+    t1 = 31;
+    acrel_single = 32;
+    baymax_ch4 = 33;
+    baymax_lpg = 34;
+    jetfire_water_soak = 47;
+}
+
+enum SlotType {
+    SLOT_NONE = 0;
+    SLOT_IBEACON = 1;
+    SLOT_EDDYSTONE_UID = 2;
+    SLOT_EDDYSTONE_URL = 3;
+    SLOT_EDDYSTONE_TLM = 4;
+    SLOT_EDDYSTONE_EID = 5;
+    SLOT_CUSTOME = 6;
+    SLOT_SENSOR = 7;
+}
+
+message Alarm {
+    required DeviceType type = 1;
+    optional float alarmHigh = 2;
+    optional float alarmLow = 3;
+}
+
+message Slot {
+    optional uint32 index = 1;
+    optional SlotType type = 2;
+    optional bool active = 3;
+    optional bytes frame = 4;
+}
+
+
+message Config {
+    required DeviceType appDeviceType = 100;
+    required bytes appSn = 101;
+    required bytes appToken = 102;
+    required bytes appHardwareversion = 103;
+    required bytes appSecureKey = 104;
+    required bytes appPassword = 105;
+    required uint32 appInterval = 106;
+    optional uint32 appBleOnTime = 107;
+    optional uint32 appBleOffTime = 108;
+    required sint32 appBleTxPower = 109;
+    required float appBleInterval = 110;
+    repeated Slot appSlots = 111;
+    repeated Alarm appAlarms =112;
+    optional uint32 appAlarmReportIntervalAcked = 114;
+    optional uint32 appAlarmReportIntervalUnacked = 115;
+
+    required bytes appUUID = 204;
+    required sint32 appRSSI = 207;
+    optional uint32 appLowBatteryBeep = 208;
+    optional uint32 appLedStatus = 209;
+
+    optional uint32 appAlarmShieldSwitch = 210;
+    optional uint32 appAlarmShieldTime = 211;
+
+    optional uint32 appInsulateSwitch = 212;
+
+    optional uint32 appDemoMode = 213;
+    optional uint32 appCdsSwitch = 214;
+    optional uint32 appWarningSwtich = 215;
+
+    optional uint32 appHumanDetectionSwitch = 216;
+    optional uint32 appHumanDetectionSync = 217;
+
+    optional uint32 appNightLight = 218;
+}

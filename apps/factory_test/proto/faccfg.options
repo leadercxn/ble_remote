@@ -1,0 +1,9 @@
+fac.* max_size:16
+fac.* max_count:1
+
+fac.Config.appSn max_size:8
+fac.Config.appToken max_size:16
+fac.Config.appSecureKey max_size:16
+fac.Config.appPassword max_size:16
+fac.Config.appSlots max_count:1
+fac.Config.appAlarms max_count:1

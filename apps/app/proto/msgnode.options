@@ -1,0 +1,13 @@
+* max_size:16
+* max_count:1
+
+AlphaParam.devEui max_size:8
+AlphaParam.appEui max_size:8
+AlphaParam.appKey max_size:16
+AlphaParam.appSkey max_size:16
+AlphaParam.nwkSkey max_size:16
+AlphaParam.channelMask max_count:6
+
+MultiSensorDataInt.data max_count:8
+
+iBeacon.uuid max_size:16
