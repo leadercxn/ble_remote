@@ -1,3 +1,3 @@
-set(target "fct")
+set(target "bootloader")
 
 version_target(${target})
