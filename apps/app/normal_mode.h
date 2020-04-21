@@ -1,10 +1,21 @@
-/* Copyright (c) 2020 SENSORO Co.,Ltd. All Rights Reserved.
- *
+#ifndef __NORMAL_MODE_H
+#define __NORMAL_MODE_H
+
+/**@brief Function for initializing power management.
  */
+void power_management_init(void);
 
-#ifndef NORMAL_MODE_H__
-#define NORMAL_MODE_H__
+/**@brief Function for handling the idle state (main loop).
+ *
+ * @details If there is no pending log operation, then sleep until next the next event occurs.
+ */
+void idle_state_handle(void);
 
+
+/**@brief Function for application normal_mode main entry.
+ */
 void normal_mode(void);
 
+
 #endif
+

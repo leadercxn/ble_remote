@@ -15,11 +15,9 @@ static bool m_module_init = false;
 
 static void cmd_battery(nrf_cli_t const * p_cli, size_t argc, char **argv)
 {
-
     UNUSED_PARAMETER(argc);
-
     UNUSED_PARAMETER(argv);
-
+    nrf_cli_info(p_cli, "battery cmd" );
 }
 
 static void cmd_battery_test(nrf_cli_t const * p_cli, size_t argc, char **argv)

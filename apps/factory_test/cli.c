@@ -22,8 +22,8 @@
  * */
 #define CLI_LOG_QUEUE_SIZE  (4)
 
-NRF_CLI_UART_DEF(my_cli_uart_transport, 0, 256, 128);     // 实例名,串口号,发送缓冲区大小,接收缓冲区大小. 
-NRF_CLI_DEF(my_cli_uart,                                 // 实例名,提示符,发送器指针(当前用串口),换行符,记录日志深度
+NRF_CLI_UART_DEF(my_cli_uart_transport, 0, 256, 256);       // 实例名,串口号,发送缓冲区大小,接收缓冲区大小. 
+NRF_CLI_DEF(my_cli_uart,                                    // 实例名,提示符,发送器指针(当前用串口),换行符,记录日志深度
             ">>",
             &my_cli_uart_transport.transport,
             '\r',

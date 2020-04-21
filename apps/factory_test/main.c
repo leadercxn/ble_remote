@@ -24,15 +24,16 @@
 #include "nrf_ble_gatt.h"
 #include "nrf_ble_qwr.h"
 #include "nrf_pwr_mgmt.h"
+#include "nrf_drv_clock.h"
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 #include "board_remote001.h"
-#include "timer.h"
+//#include "timer.h"
 
 #include "battery_handler.h"
-#include "storage.h"
+//#include "storage.h"
 #include "pl_utils.h"
 #include "pl_timer.h"
 #include "cli.h"
