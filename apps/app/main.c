@@ -38,7 +38,7 @@
 
 #include "data_handler.h"
 
-
+#include "version.h"
 
 #define APP_BLE_CONN_CFG_TAG  1            /**< A tag identifying the SoftDevice BLE configuration. */
 #define DEAD_BEEF             0xDEADBEEF   /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
@@ -139,6 +139,10 @@ int main(void)
 
     //电源管理模块初始化
     power_management_init();
+
+    NRF_LOG_INFO("APP_VERSION = 0x%04x " , APP_VERSION );
+    NRF_LOG_INFO("APP_VERSION_BYTE = 0x%02x " , APP_VERSION_BYTE );
+    NRF_LOG_INFO("APP_VERSION_STR = %s " , APP_VERSION_STR );
 
     if( config_from_flash()  )       
     {

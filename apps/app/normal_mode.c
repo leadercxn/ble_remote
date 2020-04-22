@@ -6,24 +6,8 @@
 
 #include <stdint.h>
 #include <string.h>
-#include "nordic_common.h"
-#include "nrf.h"
-#include "app_error.h"
-#include "ble.h"
-#include "ble_err.h"
-#include "ble_hci.h"
-#include "ble_srv_common.h"
-#include "ble_advdata.h"
-#include "ble_conn_params.h"
-#include "nrf_sdh.h"
-#include "nrf_gpio.h"
-#include "nrf_sdh_ble.h"
-#include "boards.h"
 #include "app_timer.h"
-#include "app_button.h"
 #include "app_scheduler.h"
-#include "nrf_ble_gatt.h"
-#include "nrf_ble_qwr.h"
 #include "nrf_pwr_mgmt.h"
 
 #include "nrf_log.h"
@@ -41,16 +25,12 @@
 #include "aes_handler.h"
 
 #include "ble_app_handler.h"
-#include "ble_strm_handler.h"
 #include "button_handler.h"
 #include "led_handler.h"
 
-APP_TIMER_DEF(m_led_timer);                                                     //创建一个led定时器
 APP_TIMER_DEF(m_battery_timer);                                                 //创建一个电池检测定时器
 APP_TIMER_DEF(m_low_power_timer);                                               //创建一个低电压定时器
 
-
-static uint16_t m_adc_volt_mv = 0 ;                                             //电池电压
 
 #define USING_FOR_TEST    0                                                     //成功率测试宏
 #if ( USING_FOR_TEST == 1 )
@@ -109,53 +89,19 @@ static void param_init(void)
 
 
 
-/**@brief Function for the LEDs initialization.
- *
- * @details Initializes all LEDs used by the application.
- */
-static void leds_init(void)
-{
-    nrf_gpio_cfg_output(STATUS_LED);
-
-    nrf_gpio_pin_set(STATUS_LED);                                   // 一上电就让led灭灯状态
-}
-
-/**
- * @brief 设置状态灯
- */
-static void status_led_set(bool status)
-{
-    if( true == status  )
-    {
-        nrf_gpio_pin_clear(STATUS_LED);                                  // 亮灯
-    }
-    else
-    {
-        nrf_gpio_pin_set(STATUS_LED);                                   // 灭灯
-    }
-}
-
-/**
- * @brief led定时器的处理函数      
- */
-static void led_timer_handler(void * p_context)
-{
-    TIMER_STOP(m_led_timer);
-    status_led_set(false);
-}
-
 /**
  * @brief led定时器的处理函数      
  */
 static void battery_timer_handler(void * p_context)
 {
-    m_adc_volt_mv = battery_sample();
+    uint16_t  m_adc_volt_mv = battery_sample();
 
     NRF_LOG_INFO("m_adc_volt_mv = %d", m_adc_volt_mv );
 
     if( m_adc_volt_mv < g_user_param.lowpowerlevel )
     {
-        TIMER_START( m_low_power_timer, (1000) );               //开启低电压提示
+        NRF_LOG_INFO("low power" );
+        TIMER_START( m_low_power_timer, (5000) );               //开启低电压提示
     }
 }
 
@@ -164,16 +110,18 @@ static void battery_timer_handler(void * p_context)
  */
 static void low_power_timer(void * p_context)
 {
-    static bool led_status;
-    if(led_status)
-    {
-        led_status = false;
-    }
-    else
-    {
-        led_status = true;
-    }
-    status_led_set(led_status);
+    ret_code_t err_code = NRF_SUCCESS ;
+    uint8_t led_index;
+    app_led_para_t app_led_para ={
+        .led_pin = app_led_io[0],
+        .active_level = 0 ,
+        .is_blink = true ,
+        .led_on_time = 5,
+        .led_off_time = 5 ,
+        .count_blink = 2,
+    };
+    err_code = led_on_control( app_led_para , &led_index );
+    APP_ERROR_CHECK(err_code);
 }
 
 
@@ -183,19 +131,30 @@ static void low_power_timer(void * p_context)
  */
 static void test_timer_handler(void * p_context)
 {
+    ret_code_t err_code = NRF_SUCCESS ;
+    uint8_t led_index;
+    app_led_para_t app_led_para ={
+        .led_pin = app_led_io[0],
+        .active_level = 0 ,
+        .is_blink = true ,
+        .led_on_time = 5,
+        .led_off_time = 5 ,
+        .count_blink = 2,
+    };
+
     m_adv_cnt++;
     if( m_adv_cnt > ADV_MAX_CNT )
     {
-        status_led_set(true);
         TIMER_STOP(m_test_timer);
         return ;
     }
                                     
     advertising_encode_msg_data( GUARD_HOME_MSG );      //打包广播数据
     advertising_start();                                //开启广播
-    status_led_set(true);
-    TIMER_START( m_led_timer, adv_continue_time() );   //开启led定时
     NRF_LOG_INFO("m_adv_cnt = %d" , m_adv_cnt );
+
+    err_code = led_on_control( app_led_para , &led_index );
+    APP_ERROR_CHECK(err_code);
 }
 #endif
 
@@ -206,9 +165,8 @@ static void test_timer_handler(void * p_context)
  */
 static void timers_init(void)
 {
-    TIMER_CREATE(&m_led_timer,          APP_TIMER_MODE_SINGLE_SHOT, led_timer_handler       );          //创建led定时器
     TIMER_CREATE(&m_battery_timer,      APP_TIMER_MODE_REPEATED,    battery_timer_handler   );          //创建电池检测定时器
-    TIMER_CREATE(&m_low_power_timer,    APP_TIMER_MODE_REPEATED,    low_power_timer         );          //创建电池检测定时器
+    TIMER_CREATE(&m_low_power_timer,    APP_TIMER_MODE_REPEATED,    low_power_timer         );          //低电压闪烁定时器
     TIMER_START( m_battery_timer, ADC_TIMER_PERIOD );   //开启电池检测定时器
 
 #if ( USING_FOR_TEST == 1 )
@@ -321,8 +279,6 @@ void normal_mode(void)
     battery_init();                                         
     
 
-    
-//    NRF_LOG_INFO("NRF_SD_BLE_API_VERSION = %d" , NRF_SD_BLE_API_VERSION );
     for (;;)
     {
         app_sched_execute();

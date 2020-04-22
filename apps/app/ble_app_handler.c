@@ -1,23 +1,11 @@
 #include <stdint.h>
 #include <string.h>
-#include "nordic_common.h"
-#include "nrf.h"
-#include "app_error.h"
 #include "ble.h"
-#include "ble_err.h"
-#include "ble_hci.h"
-#include "ble_srv_common.h"
 #include "ble_advdata.h"
-#include "ble_conn_params.h"
 #include "nrf_sdh.h"
 #include "nrf_sdh_ble.h"
-#include "app_timer.h"
 #include "app_button.h"
-#include "app_scheduler.h"
-#include "nrf_ble_gatt.h"
-#include "nrf_ble_qwr.h"
 #include "nrf_pwr_mgmt.h"
-#include "ble_advertising.h"
 #include "ble_dfu.h"
 #include "nrf_bootloader_info.h"
 #include "nrf_power.h"
@@ -28,13 +16,11 @@
 #include "nrf_log_default_backends.h"
 #include "timer.h"
 
-#include "battery_handler.h"
-#include "fstorage_cfg.h"
 #include "fstorage_handler.h"
 
 #include "aes_handler.h"
 #include "data_handler.h"
-
+#include "version.h"
 #include "ble_strm_handler.h"
 
 
@@ -247,6 +233,17 @@ void tx_power_set( int8_t tx_power )
     APP_ERROR_CHECK(err_code);
 }
 
+/**
+ * @brief 内存反着拷贝
+ */
+static void memcpyr( uint8_t *dst, const uint8_t *src, uint16_t size )
+{
+    dst = dst + ( size - 1 );
+    while( size-- )
+    {
+        *dst-- = *src++;
+    }
+}
 
 /**
  * @brief 设置Public addresee地址
@@ -258,7 +255,8 @@ static void ble_address_set(uint8_t addr_type)
     ble_gap_addr_t gap_addr;
 
     gap_addr.addr_type = addr_type ;
-    memcpy(gap_addr.addr, &g_user_param.sn[2], 6);
+    memcpyr(gap_addr.addr, &g_user_param.sn[2], 6);
+    
     err_code = sd_ble_gap_addr_set(&gap_addr);
     APP_ERROR_CHECK( err_code );
 }
@@ -326,7 +324,7 @@ void advertising_encode_msg_data( adv_enum_e msg_type )
         0x1A, 0x16, 0xCE, 0x6C,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //SN
         0,                                              //硬件版本号
-        FIRMWARE_VERSION,                               //固件版本号,
+        APP_VERSION_BYTE,                               //固件版本号,
         0x00,                                           //设备电量，
         0x00,                                           //BLE功率
         0x00, 0x00, 0x00, 0x00,                         //BLE间隔,float型，小端序

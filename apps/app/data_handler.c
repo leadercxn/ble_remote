@@ -1,36 +1,16 @@
 #include <stdint.h>
 #include <string.h>
-#include "nordic_common.h"
-#include "nrf.h"
-#include "app_error.h"
-#include "ble.h"
-#include "ble_err.h"
-#include "ble_hci.h"
-#include "ble_srv_common.h"
-#include "ble_advdata.h"
-#include "ble_conn_params.h"
-#include "nrf_sdh.h"
-#include "nrf_sdh_ble.h"
-#include "boards.h"
-#include "app_timer.h"
-#include "app_button.h"
-#include "nrf_ble_gatt.h"
-#include "nrf_ble_qwr.h"
-#include "nrf_pwr_mgmt.h"
-#include "app_util.h"
+
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
-#include "nrf_soc.h"
-#include "nrf_drv_rng.h"
 
 #include "fstorage_handler.h"
 #include "aes_handler.h"
 #include "data_handler.h"
 #include "battery_handler.h"
 #include "ble_strm_handler.h"
-#include "ble_app_handler.h"
-
+#include "version.h"
 #include "pb_common.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
@@ -51,12 +31,9 @@ static uint8_t scret_data[16];                //最终暗文数据16B
  */
 static void scret_data_ready( adv_enum_e adv_type )
 {
-    uint16_t battery_volt = battery_sample();
-
     memset( scret_data , 0 , sizeof(scret_data) );
 
     scret_data[0] = adv_type ;
-    uint16_encode( battery_volt , &scret_data[1] );   
 
     NRF_LOG_DEBUG("scret_data_ready  : " );
     NRF_LOG_HEXDUMP_DEBUG(scret_data , sizeof(scret_data) );     //打印数据
@@ -67,8 +44,6 @@ static void scret_data_ready( adv_enum_e adv_type )
  */
 static void scret_data_encode( void )
 {
-    uint16_t battery_volt = battery_sample();
-
     for( uint8_t i = 0 ; i < sizeof(scret_data) ; i++ )
     {
         scret_data[i] ^= cc_ecb_data.ciphertext[i] ;
@@ -88,23 +63,13 @@ static void scret_data_encode( void )
 void  scandata_encode( adv_enum_e adv_type  , uint8_t *scandata )
 {
     uint8_t index = 0 ;
+    uint16_t battery_volt = battery_sample();
 
     memset( scandata , 0 , ADV_SCANDATA_LEN );
 
     scret_data_ready( adv_type );       //
     aes_encrypt();                      //cleartext && key 加密
     scret_data_encode();                //生成最终暗文
-
-#if 0
-    scandata[index] = 0x03 ;
-    index++;
-
-    scandata[index] = 0x03 ;
-    index++;
-
-    uint16_encode( REMOTE_UUID , &scandata[index] ); 
-    index+=2;
-#endif
 
     scandata[index] = ( ADV_SCANDATA_LEN - 1 ) ;
     index++;
@@ -115,7 +80,7 @@ void  scandata_encode( adv_enum_e adv_type  , uint8_t *scandata )
     uint16_encode( REMOTE_UUID , &scandata[index] ); 
     index+=2;
 
-    scandata[index] = FIRMWARE_VERSION ;
+    scandata[index] = APP_VERSION_BYTE ;
     index++;
 
     uint16_encode( g_adv_fnt , &scandata[index] ); 
@@ -128,6 +93,9 @@ void  scandata_encode( adv_enum_e adv_type  , uint8_t *scandata )
     index++;
 
     memcpy( &scandata[index] , &g_user_param.sn[0] , 2 );
+    index+=2;
+
+    uint16_encode( battery_volt , &scandata[index] );   //电池电压
     index+=2;
 
     memcpy( &scandata[index] , scret_data , sizeof(scret_data) );

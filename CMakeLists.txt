@@ -27,6 +27,7 @@ if (NOT SDK_ROOT)
     return()
 endif ()
 
+include("${CMAKE_CONFIG_DIR}/version.cmake")
 include("${CMAKE_CONFIG_DIR}/sdk/${nRF5_SDK_VERSION}.cmake")
 include("${CMAKE_CONFIG_DIR}/platform/${PLATFORM}.cmake")
 include("${CMAKE_CONFIG_DIR}/softdevice/${SOFTDEVICE}.cmake")
@@ -36,6 +37,7 @@ message(STATUS "Platform: ${PLATFORM}")
 message(STATUS "Arch: ${${PLATFORM}_ARCH}")
 message(STATUS "SoftDevice: ${SOFTDEVICE}")
 
+configure_file(version.h.in  ${CMAKE_SOURCE_DIR}/apps/app/config/version.h)
 
 set(ARCH ${${PLATFORM}_ARCH})
 

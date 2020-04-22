@@ -7,8 +7,7 @@ extern "C" {
 
 #include "ble_strm_handler.h"
 
-#define ADV_SCANDATA_LEN    27
-#define FIRMWARE_VERSION    0x10
+#define ADV_SCANDATA_LEN    29
 #define REMOTE_UUID         0x77DB            //遥控器作为扫描的UUID   
 
 typedef enum 

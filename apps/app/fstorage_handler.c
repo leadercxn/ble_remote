@@ -8,17 +8,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include <string.h>
-#include "nordic_common.h"
-#include "nrf.h"
-#include "nrf_sdm.h"
-#include "app_error.h"
 #include "nrf_fstorage.h"
 #include "nrf_fstorage_sd.h"
-#include "nrf_sdh.h"
 #include "fds.h"
 #include "nrf_log.h"
-#include "nrf_log_ctrl.h"
-#include "nrf_log_default_backends.h"
 
 #include "fstorage_cfg.h"
 #include "fstorage_handler.h"
@@ -118,8 +111,8 @@ void fstorage_init(void)
  */
 void fstorage_write(uint32_t write_addr, void const * p_data, uint32_t len)
 {
-    len = ((len+3)/4)*4;
-    
+    len = ALIGN_NUM(4, len);    //字节对齐
+
     ret_code_t rc = nrf_fstorage_write(&fstorage, write_addr, p_data, len, NULL);
     APP_ERROR_CHECK(rc);
 }
@@ -152,16 +145,16 @@ void fstorage_erase(uint32_t page, uint32_t len)
  */
 void adv_fnt_store(void)
 {
-    static uint32_t adv_fnt_temp ;
+    static uint16_t adv_fnt_temp ;
 
-    adv_fnt_temp = (uint32_t) g_adv_fnt;
+    adv_fnt_temp = g_adv_fnt;
 
     if( g_adv_flash_offset > 1023 )             //写爆了4K的flash区，先擦除
     {
         g_adv_flash_offset = 0 ;
         fstorage_erase( ADV_FNT_ADDR, 1 );
     }
-    fstorage_write( (ADV_FNT_ADDR + 4 * g_adv_flash_offset ), &adv_fnt_temp , sizeof(uint32_t) );
+    fstorage_write( (ADV_FNT_ADDR + 4 * g_adv_flash_offset ), &adv_fnt_temp , sizeof(uint16_t) );
 
     NRF_LOG_INFO("store g_adv_fnt = %d ,g_adv_flash_offset = %d  at 0x%08x" , g_adv_fnt , g_adv_flash_offset , (ADV_FNT_ADDR + 4 * g_adv_flash_offset ) );
 

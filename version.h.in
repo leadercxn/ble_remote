@@ -1,0 +1,8 @@
+#ifndef VERSION_H__
+#define VERSION_H__
+
+#define APP_VERSION          @PRJ_VERSION@
+#define APP_VERSION_BYTE     @PRJ_VERSION_BYTE@
+#define APP_VERSION_STR      @PRJ_VERSION_STRING@
+
+#endif

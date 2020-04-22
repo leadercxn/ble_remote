@@ -137,7 +137,6 @@ static void led_timer_timer(void * p_context)
     if( LED_LIST_SZ  == not_alives )                    //led事件列表全部无效，关闭定时器
     {
         TIMER_STOP(m_led_timer);
-        NRF_LOG_INFO("====================> stop the led timer");
     }
 }
 

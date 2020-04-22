@@ -5,6 +5,7 @@ file(GLOB USER_SOURCE_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/interface/battery_handler.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/platform/pl_adc.c"
+#    "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/util/util.c"            #app的内存不够，所以没要整个工具文件
     "${CMAKE_CURRENT_SOURCE_DIR}/fstorage_handler.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/factory_mode.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/normal_mode.c"
@@ -22,6 +23,7 @@ set(USER_INCLUDE_DIRS
     "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/platform/nrf52/timer"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/platform"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/interface"
+#    "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/util"
     "${CMAKE_CURRENT_SOURCE_DIR}/user_board"
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/proto"
