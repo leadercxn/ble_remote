@@ -66,7 +66,8 @@ void cli_greeting(void)
 {
     nrf_cli_info(&my_cli_uart, "\n");
     nrf_cli_info(&my_cli_uart, "Sensoro BLE remote test");
-    nrf_cli_info(&my_cli_uart, "compiled %s\n", __DATE__);
+    nrf_cli_info(&my_cli_uart, "compiled %s", __DATE__);
+    nrf_cli_info(&my_cli_uart, "Please input: \"help \" to list all cmd" );
     nrf_cli_info(&my_cli_uart, "Please press the Tab key to see all available commands.");
 }
 

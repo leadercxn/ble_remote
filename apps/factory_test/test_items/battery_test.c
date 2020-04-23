@@ -13,12 +13,6 @@
 
 static bool m_module_init = false;
 
-static void cmd_battery(nrf_cli_t const * p_cli, size_t argc, char **argv)
-{
-    UNUSED_PARAMETER(argc);
-    UNUSED_PARAMETER(argv);
-    nrf_cli_info(p_cli, "battery cmd" );
-}
 
 static void cmd_battery_test(nrf_cli_t const * p_cli, size_t argc, char **argv)
 {
@@ -35,28 +29,6 @@ static void cmd_battery_test(nrf_cli_t const * p_cli, size_t argc, char **argv)
     nrf_cli_info(p_cli, "battery voltage = %d mv" , adc_volt_mv );
 }
 
-
-NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_battery_cmd)
-
-{
-
-    NRF_CLI_CMD(vol,   NULL, "get the battery voltage", cmd_battery_test),
-
-    NRF_CLI_SUBCMD_SET_END
-
-};
-
-NRF_CLI_CMD_REGISTER(battery, &m_battery_cmd, "battery", cmd_battery);
-
-
-
-
-/**用法
- * demo:
- * 
- *  >>battery vol
- *  battery voltage = 3330 mv
- */
-
+NRF_CLI_CMD_REGISTER(battery, NULL, "get the battery  volt", cmd_battery_test);
 
 

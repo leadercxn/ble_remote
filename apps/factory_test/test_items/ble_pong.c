@@ -12,7 +12,6 @@
 #include "radio_config.h"
 #include "pl_timer.h"
 
-
 static ble_radio_event_handler_t m_radio_event_handler;
 static nrf_cli_t const *mp_cli = NULL ;                 //接收来自上一层传递的串口指针     
 
@@ -30,13 +29,6 @@ static uint32_t m_tx_packet = 0;
 static uint32_t m_ble_pong_state = BLE_PONG_STATE_IDLE;
 
 
-
-
-static void cmd_ble_pong(nrf_cli_t const * p_cli, size_t argc, char **argv)
-{
-    UNUSED_PARAMETER(argc);
-    UNUSED_PARAMETER(argv);
-}
 
 static void usage(void)
 {
@@ -97,7 +89,7 @@ static void on_ble_radio_event_end_handler(void)
 /**
  * @brief 子命令pong 对应的执行函数 , argc是从子命令开始算的
  */
-static void cmd_ble_pong_test(nrf_cli_t const * p_cli, size_t argc, char **argv)
+void cmd_ble_pong_test(nrf_cli_t const * p_cli, size_t argc, char **argv)
 {
     
     uint8_t count = 0;
@@ -219,20 +211,7 @@ static void cmd_ble_pong_test(nrf_cli_t const * p_cli, size_t argc, char **argv)
 
 
 
-
-
-
-
-NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_ble_pong_cmd)
-{
-
-    NRF_CLI_CMD( pong,   NULL, "ble pong test", cmd_ble_pong_test ),
-
-    NRF_CLI_SUBCMD_SET_END
-
-};
-
-NRF_CLI_CMD_REGISTER(ble, &m_ble_pong_cmd, "ble pong", cmd_ble_pong);
+NRF_CLI_CMD_REGISTER(blepong, NULL, "ble pong test", cmd_ble_pong_test);
 
 
 

@@ -12,6 +12,7 @@
 #include "radio_config.h"
 #include "pl_timer.h"
 
+
 APP_TIMER_DEF(m_ble_ping_tx_timer);                     //创建一个定时器
 APP_TIMER_DEF(m_ble_ping_timeout_timer);                //创建一个定时器
 
@@ -30,12 +31,6 @@ static uint32_t m_ping_tx_num = 0;
 static uint32_t m_rx_packet = 0;
 static uint32_t m_tx_packet = 0;
 static uint32_t m_ble_ping_state = BLE_PING_STATE_IDLE;
-
-static void cmd_ble_ping(nrf_cli_t const * p_cli, size_t argc, char **argv)
-{
-    UNUSED_PARAMETER(argc);
-    UNUSED_PARAMETER(argv);
-}
 
 /**
  * @brief     
@@ -126,7 +121,7 @@ static void on_ble_radio_event_end_handler(void)
 /**
  * @brief 子命令ping 对应的执行函数 , argc是从子命令开始算的
  */
-static void cmd_ble_ping_test(nrf_cli_t const * p_cli, size_t argc, char **argv)
+void cmd_ble_ping_test(nrf_cli_t const * p_cli, size_t argc, char **argv)
 {
     uint8_t  count = 0;
     int8_t   tx_power = 4;
@@ -252,21 +247,7 @@ static void cmd_ble_ping_test(nrf_cli_t const * p_cli, size_t argc, char **argv)
 
 
 
-
-
-
-
-NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_ble_ping_cmd)
-
-{
-
-    NRF_CLI_CMD( ping,   NULL, "ble ping test", cmd_ble_ping_test ),
-
-    NRF_CLI_SUBCMD_SET_END
-
-};
-
-NRF_CLI_CMD_REGISTER(ble, &m_ble_ping_cmd, "ble ping", cmd_ble_ping);
+NRF_CLI_CMD_REGISTER(bleping, NULL, "ble ping test", cmd_ble_ping_test);
 /**用法
  * demo:
  * 

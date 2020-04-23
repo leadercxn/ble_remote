@@ -13,6 +13,7 @@ file(GLOB USER_SOURCE_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/test_items/battery_test.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/test_items/ble_ping.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/test_items/ble_pong.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_items/usage.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/proto/*.c"
 )
 
