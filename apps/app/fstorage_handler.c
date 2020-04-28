@@ -248,6 +248,7 @@ uint8_t user_param_get_from_fac_oflash(void)
         return NRF_ERROR_INTERNAL;
     }
     
+    g_user_param.hw_ver = uint16_big_decode(config_param.appHardwareversion.bytes);
     memcpy(g_user_param.sn, config_param.appSn.bytes, config_param.appSn.size);     //把sn拷出来
     memcpy(g_user_param.appSecureKey, config_param.appSecureKey.bytes, config_param.appSecureKey.size);     //把appSecureKey拷出来
     g_user_param.blefnt = config_param.appBleFnt ;
@@ -286,6 +287,11 @@ uint8_t user_param_get_from_fac_oflash(void)
 
     NRF_LOG_INFO("ibeacon_minor:" );
     NRF_LOG_INFO("0x%04x" , g_user_param.ibeacon_minor);
+
+    NRF_LOG_INFO("hw_version:" );
+    NRF_LOG_INFO("0x%04x" , g_user_param.hw_ver);
+
+    
     return NRF_SUCCESS;
 }
 

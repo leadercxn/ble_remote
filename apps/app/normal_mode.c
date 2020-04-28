@@ -40,7 +40,7 @@ APP_TIMER_DEF(m_test_timer);                                                    
 static uint16_t m_adv_cnt = 0 ;                                                 //广播计数
 #endif
 
-uint16_t app_led_io[]= { STATUS_LED , };                                        //led io
+static uint16_t app_led_io[]= { STATUS_LED , };                                        //led io
 #define LED_TIMER_PERIOD            50                                          //控制led timer的周期宽度
 
 #define ADC_TIMER_PERIOD            (10*60*1000)

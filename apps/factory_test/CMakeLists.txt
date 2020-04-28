@@ -13,18 +13,21 @@ file(GLOB USER_SOURCE_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/test_items/battery_test.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/test_items/ble_ping.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/test_items/ble_pong.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_items/gpio_test.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/test_items/usage.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/proto/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../app/led_handler.c"
 )
 
 set(USER_INCLUDE_DIRS
     "${CMAKE_CURRENT_SOURCE_DIR}/config"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/platform/nrf52/timer"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/platform/nrf52/timer"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/platform"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/interface"
     "${CMAKE_CURRENT_SOURCE_DIR}/user_board"
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/proto"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../app"
 )
 
 
