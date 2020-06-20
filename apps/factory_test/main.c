@@ -25,7 +25,7 @@
 #include "nrf_ble_qwr.h"
 #include "nrf_pwr_mgmt.h"
 #include "nrf_drv_clock.h"
-
+#include "nrf_drv_gpiote.h"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
@@ -33,10 +33,14 @@
 //#include "timer.h"
 
 #include "battery_handler.h"
-//#include "storage.h"
 #include "pl_utils.h"
 #include "pl_timer.h"
 #include "cli.h"
+
+#include "storage_handler.h"
+
+
+extern void cmd_ble_pong(void);
 
 static void log_init(void)
 {
@@ -61,29 +65,54 @@ static void clock_init(void)
     }
 }
 
+static void button_pin_init(void)
+{
+    nrf_drv_gpiote_init();
 
+    nrf_gpio_cfg_input(GUARD_HOME_BUTTON, NRF_GPIO_PIN_NOPULL);
+    nrf_gpio_cfg_input(ALARM_SET_BUTTON, NRF_GPIO_PIN_NOPULL);
+    nrf_gpio_cfg_input(GUARD_SET_BUTTON, NRF_GPIO_PIN_NOPULL);
+    nrf_gpio_cfg_input(GUARD_CANCEL_BUTTON, NRF_GPIO_PIN_NOPULL);
+
+    nrf_gpio_cfg_output(STATUS_LED);
+
+}
 
 
 /**@brief Function for application main entry.
  */
 int main(void)
 {
+
     APP_ERROR_CHECK(NRF_LOG_INIT(NULL));
 
     log_init();
 
     clock_init();
     pl_time_init();
-
     pl_pool_init();
+    button_pin_init();
+
+    fstorage_init();
 
     cli_init();
     cli_greeting();
     cli_start();
-    
+    cmd_cache();
+
+
     for (;;)
     {
         cli_process();
+        if( 0 == nrf_gpio_pin_read(GUARD_CANCEL_BUTTON) )
+        {
+            NVIC_SystemReset();
+            //nrf_gpio_pin_write(STATUS_LED , 1); 
+        }
+        else
+        {
+            //nrf_gpio_pin_write(STATUS_LED ,0); 
+        }
     }
 }
 

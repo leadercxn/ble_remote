@@ -21,10 +21,10 @@
 #include "aes_handler.h"
 #include "data_handler.h"
 #include "version.h"
+#include "ble_strm.h"
 #include "ble_strm_handler.h"
 
-
-#define DEVICE_NAME                     "SSS_CONTROLLER"                            /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                     "SSS_CONTROLLER"                        /**< Name of device. Will be included in the advertising data. */
 
 #define APP_BLE_OBSERVER_PRIO           3                                       /**< Application's BLE observer priority. You shouldn't need to modify this value. */
 #define APP_BLE_CONN_CFG_TAG            1                                       /**< A tag identifying the SoftDevice BLE configuration. */
@@ -41,6 +41,9 @@ uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                               
 static uint8_t  m_adv_handle = BLE_GAP_ADV_SET_HANDLE_NOT_SET;                  /**< Advertising handle used to identify an advertising set. */
 static bool     m_adv_on_off = false ;                                          //广播打开状态
 
+static uint8_t key_buf[KEY_CHAR_ATTR_DATA_LEN];
+
+static adv_enum_e m_msg_type;
 /**@brief Handler for shutdown preparation.
  *
  * @details During shutdown procedures, this function will be called at a 1 second interval
@@ -192,6 +195,8 @@ void dfu_services_init(void)
 
 
 
+
+
 /**@brief Function for the GAP initialization.
  *
  * @details This function sets up all the necessary GAP (Generic Access Profile) parameters of the
@@ -305,6 +310,8 @@ void advertising_encode_msg_data( adv_enum_e msg_type )
     ble_gap_adv_data_t adv_data ;
     ble_gap_adv_params_t adv_params ;
 
+    m_msg_type = msg_type ;
+
     memset(&adv_params, 0, sizeof(ble_gap_adv_params_t));
 
     static uint8_t advdata[] =                                          // 在家布防广播数据   (广播数据需要static ，不然广播数据有误)
@@ -318,20 +325,21 @@ void advertising_encode_msg_data( adv_enum_e msg_type )
         0x01,                   //Measured Power 发射功率，需根据距离计算
     };
 
-    static uint8_t scan_atool_data[31] =
+    static uint8_t scan_atool_data[] =
     {
         0x03, 0x03, 0xCE, 0x6C,
-        0x1A, 0x16, 0xCE, 0x6C,
+        0x19, 0x16, 0xCE, 0x6C,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //SN
         0,                                              //硬件版本号
         APP_VERSION_BYTE,                               //固件版本号,
         0x00,                                           //设备电量，
         0x00,                                           //BLE功率
         0x00, 0x00, 0x00, 0x00,                         //BLE间隔,float型，小端序
-        0x00,                                           //lora 功率
-        0x00,                                           //lora sf & adr, 高四位sf,底1位adr
-        0x00, 0x00, 0xaa,                               //lora 间隔, 小端序
-        0xbb, 0xaa,
+        0x00,                                           //
+        0x00,                                           //
+        0x00, 0x00,                                     //
+        0xaa,                                           //
+        0x00, 
     };
 
     static uint8_t scandata[ ADV_SCANDATA_LEN ];
@@ -352,8 +360,8 @@ void advertising_encode_msg_data( adv_enum_e msg_type )
         memcpy( &scan_atool_data[8] , &g_user_param.sn , 8 );
         adv_data.scan_rsp_data.p_data = scan_atool_data;
         adv_data.scan_rsp_data.len = sizeof(scan_atool_data);      
-
         adv_params.duration        = 30*100;                            //常规广播30s
+
     }
     else                                                                //响应声光报扫描的数据
     {
@@ -361,15 +369,31 @@ void advertising_encode_msg_data( adv_enum_e msg_type )
         adv_data.scan_rsp_data.p_data = scandata;
         adv_data.scan_rsp_data.len = sizeof(scandata);
 
-        adv_params.duration        = g_user_param.ble_int * g_user_param.blefnt / 10 ;  //以自身的参数作用设置广播超时时间 10ms uint
+        if( PAIR_MSG == msg_type )
+        {
+            adv_params.duration        = 600 ;                                              //配对广播6s
+        }
+        else
+        {
+            adv_params.duration        = g_user_param.ble_int * g_user_param.blefnt / 10 ;  //以自身的参数作用设置广播超时时间 10ms uint
+        }
     }
 
     adv_params.primary_phy     = BLE_GAP_PHY_1MBPS;
     adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED;
     adv_params.p_peer_addr     = NULL;
     adv_params.filter_policy   = BLE_GAP_ADV_FP_ANY;
-    adv_params.interval        = (uint32_t)(g_user_param.ble_int * 1.6);            //以全局变量作为参数，改变广播间隔
-    //    adv_params.channel_mask[4] = 0xc0;                                        //关闭广播38，39通道
+
+    if(( PAIR_MSG == msg_type )||( NORMAL_MSG == msg_type ))
+    {
+        adv_params.interval = 160 ;                                                     //配对广播间隔100ms
+    }
+    else
+    {
+        adv_params.interval        = (uint32_t)(g_user_param.ble_int * 1.6);            //以全局变量作为参数，改变广播间隔
+    }
+
+    //    adv_params.channel_mask[4] = 0xc0;                                            //关闭广播38，39通道
     err_code = sd_ble_gap_adv_set_configure(&m_adv_handle, &adv_data, &adv_params);
     APP_ERROR_CHECK(err_code);
 
@@ -381,6 +405,8 @@ void advertising_encode_msg_data( adv_enum_e msg_type )
  */
 static void ble_service_init(void)
 {
+    key_pointer_register( key_buf );
+
     // a-tool 通信服务
     ble_srv_strm_init();
 
@@ -409,18 +435,57 @@ uint16_t adv_continue_time(void)
  * @param    p_ble_evt    ble 事件
  */
 static void on_ble_evt(ble_evt_t *p_ble_evt)
-{
+{   
+    uint32_t err_code ;
+
+    ble_gatts_value_t ble_gatts_value ;
+    ble_gatts_value_t *p = &ble_gatts_value ;
+    uint16_t value_handle  =  strm_key_char_value_handle_get() ; 
+
+    NRF_LOG_INFO("evt_id = %d " , p_ble_evt->header.evt_id );
     switch(p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
             NRF_LOG_INFO("BLE_GAP_EVT_CONNECTED");
             m_adv_on_off = false ;
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+
             break;
+
+        case BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST:
+            NRF_LOG_INFO("BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST");
+            if ( value_handle == p_ble_evt->evt.gatts_evt.params.authorize_request.request.read.handle )    // 读取了密钥的特征
+            {   
+                memset( key_buf , 0 , sizeof(key_buf) );
+                key_char_attr_data_encode(key_buf);                                                         //配对包，都设置了key特征值数据
+
+                ble_gatts_value.len = KEY_CHAR_ATTR_DATA_LEN ;
+                ble_gatts_value.offset = 0 ;
+                ble_gatts_value.p_value = key_buf ;
+
+                err_code = sd_ble_gatts_value_set( m_conn_handle , strm_key_char_value_handle_get() , p );  //设置特征值
+                APP_ERROR_CHECK(err_code);
+
+                NRF_LOG_INFO("change gatts value");
+            }
+
+            break ;
 
         case BLE_GAP_EVT_DISCONNECTED:
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
             NRF_LOG_INFO("BLE_GAP_EVT_DISCONNECTED");
+
+            if( NORMAL_MSG == m_msg_type )
+            {
+                advertising_encode_msg_data(NORMAL_MSG);
+                advertising_start(); 
+                NRF_LOG_INFO("re adv  again"); 
+            }
+            else
+            {
+                m_adv_on_off = false ;
+            }
+            break ;
 
         case BLE_GAP_EVT_ADV_SET_TERMINATED:                        //广播终止
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
@@ -437,7 +502,7 @@ static void on_ble_evt(ble_evt_t *p_ble_evt)
 static void ble_evt_dispatch(ble_evt_t const * p_ble_evt, void * p_context)
 {                           
     on_ble_evt((ble_evt_t *)p_ble_evt);
-    on_ble_srv_strm_evt((ble_evt_t *)p_ble_evt);         //strm服务派发
+    on_ble_srv_strm_evt((ble_evt_t *)p_ble_evt);                    //strm服务派发
 }   
 
 

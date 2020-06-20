@@ -5,18 +5,25 @@ file(GLOB USER_SOURCE_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/main.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/cli.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/radio_config.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/storage_handler.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/interface/battery_handler.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/interface/storage_handler.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/platform/pl_adc.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/platform/pl_utils.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../lib/platform/pl_timer.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/storage.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/test_items/battery_test.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/test_items/ble_ping.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/test_items/ble_pong.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/test_items/gpio_test.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_items/ble_ctx.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_items/cache.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/test_items/usage.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/user_cli/cli_utils_cmds.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/user_cli/nrf_cli.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/user_cli/uart/nrf_cli_uart.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/proto/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../app/led_handler.c"
+
 )
 
 set(USER_INCLUDE_DIRS
@@ -27,7 +34,10 @@ set(USER_INCLUDE_DIRS
     "${CMAKE_CURRENT_SOURCE_DIR}/user_board"
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/proto"
+    "${CMAKE_CURRENT_SOURCE_DIR}/user_cli"
+    "${CMAKE_CURRENT_SOURCE_DIR}/user_cli/uart"
     "${CMAKE_CURRENT_SOURCE_DIR}/../app"
+
 )
 
 
@@ -46,13 +56,14 @@ set(SDK_LIBRARY_SOURCE_FILES
     "${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uart.c"
     "${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_uarte.c"
     "${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_saadc.c"
+    "${SDK_ROOT}/modules/nrfx/hal/nrf_nvmc.c"
     "${SDK_ROOT}/components/boards/boards.c"
-    "${SDK_ROOT}/components/libraries/bsp/bsp.c"
-    "${SDK_ROOT}/components/libraries/bsp/bsp_btn_ble.c"
+ #   "${SDK_ROOT}/components/libraries/bsp/bsp.c"
+ #   "${SDK_ROOT}/components/libraries/bsp/bsp_btn_ble.c"
     "${SDK_ROOT}/components/libraries/button/app_button.c"
-    "${SDK_ROOT}/components/libraries/cli/cli_utils_cmds.c"
-    "${SDK_ROOT}/components/libraries/cli/nrf_cli.c"
-    "${SDK_ROOT}/components/libraries/cli/uart/nrf_cli_uart.c"
+ #    "${SDK_ROOT}/components/libraries/cli/cli_utils_cmds.c"
+ #    "${SDK_ROOT}/components/libraries/cli/nrf_cli.c"
+ #    "${SDK_ROOT}/components/libraries/cli/uart/nrf_cli_uart.c"
 
  #   "${SDK_ROOT}/components/libraries/crypto/nrf_crypto_aead.c"
  #   "${SDK_ROOT}/components/libraries/crypto/nrf_crypto_aes.c"
@@ -99,7 +110,7 @@ set(SDK_LIBRARY_SOURCE_FILES
     "${SDK_ROOT}/components/libraries/experimental_section_vars/nrf_section_iter.c"
     "${SDK_ROOT}/components/libraries/fds/fds.c"
     "${SDK_ROOT}/components/libraries/fstorage/nrf_fstorage.c"
-    "${SDK_ROOT}/components/libraries/fstorage/nrf_fstorage_sd.c"
+    "${SDK_ROOT}/components/libraries/fstorage/nrf_fstorage_nvmc.c"
     "${SDK_ROOT}/components/libraries/hardfault/hardfault_implementation.c"
     "${SDK_ROOT}/components/libraries/log/src/nrf_log_backend_rtt.c"
     "${SDK_ROOT}/components/libraries/log/src/nrf_log_backend_serial.c"
@@ -191,8 +202,8 @@ set(SDK_LIBRARY_INCLUDE_DIRS
     "${SDK_ROOT}/components/libraries/button"
     "${SDK_ROOT}/components/libraries/csense_drv"
     "${SDK_ROOT}/components/libraries/csense"
-    "${SDK_ROOT}/components/libraries/cli"
-    "${SDK_ROOT}/components/libraries/cli/uart"
+ #    "${SDK_ROOT}/components/libraries/cli"
+ #    "${SDK_ROOT}/components/libraries/cli/uart"
     "${SDK_ROOT}/components/libraries/crc16"
     "${SDK_ROOT}/components/libraries/crc32"
     "${SDK_ROOT}/components/libraries/ecc"
@@ -245,6 +256,7 @@ set(SDK_LIBRARY_INCLUDE_DIRS
     "${SDK_ROOT}/modules/nrfx/drivers"
     "${SDK_ROOT}/modules/nrfx/drivers/include"
     "${SDK_ROOT}/modules/nrfx/mdk"
+    "${SDK_ROOT}/modules/nrfx/hal"
 
     "${SDK_ROOT}/integration/nrfx"
     "${SDK_ROOT}/integration/nrfx/legacy"
@@ -375,7 +387,5 @@ target_link_libraries(${target}
 
 create_hex(${target})
 add_flash_target(${target})
-
-get_property(target_include_dirs TARGET ${target} PROPERTY INCLUDE_DIRECTORIES)
 
 

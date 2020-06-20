@@ -1,48 +1,25 @@
-# NRF52 TEMPLATE
+# Usage
 
-## Code Structure
+* 依赖
+    armcc/gcc ,gcc编译app 比 armcc编译app 大19K
+    ninja
+    nrf_command_tool
 
-```bash
-.
-+-- nRF5_SDK_16.0.0_98a08e2
-+-- nrf52_template
-|   +-- build
-|   +-- cmake
-|   +-- lib
-|   +-- src
-|   |   +-- app
-|   |   +-- common
-|   |   |   +-- CMakeLists.txt
-|   |   +-- config
-|   |   +-- linker
-|   |   +-- CMakeLists.txt
-|   +-- CMakeLists.txt
-|   +-- readme.md
-|   +-- .gitignore
-```
+* 操作
+    mkdir build && cd build
+    cmake -DTOOLCHAIN=armcc -GNinja -DFW_TYPE=RELEASE ..     //配置工程为release模式,默认
+    cmake -DTOOLCHAIN=armcc -GNinja -DFW_TYPE=TEST ..        //配置工程为test模式
 
-## Requirements
+    ninja app           //编译app
+    ninja flash_app     //烧录app
 
-* nRF5_SDK_16 has been extracted
-* A Linux environment, Ubuntu 18.04
-* GCC ARM Embedded 7.2018q2.update
-* MDK-ARM version 5.25 (optional)
+    ninja factory       //编译工厂测试固件
+    ninja flash_factory //烧写工厂测试固件
 
-## How To Use
+    ninja merge         //生成集 sd,app,bootloader,bootloader_settings四合一的综合hex文件
+    ninja flash_merge   //烧录集 sd,app,bootloader,bootloader_settings四合一的综合hex文件
 
-1. This template project uses GCC ARM Embedded as its compile toolchain.
-2. Create 'build' folder under the root of the project folder.
-3. Go 'build' folder then 'cmake -GNinja ..'
-4. Enter 'ninja' to compile.
-5. Enter 'ninja flash' to flash softdevice merged hex file.
-6. Enter 'ninja merge' to create a softdevice merged hex file.
+    ninja dfu_pkg       //生成空中升级包
 
-## Something attention 
- * According to the actual platform to modify   nrf52_template/cmake/platform.cmake  &&  nrf52_template/src/CMakeLists.txt/ -DBOARD_PCA10056
- * According to the PC compiler path to modify  nrf52_template/cmake/toolchain/armcc.cmake
- * According to the actual platform to add      nrf52_template/src/linker/xxxxxxxxx.sct  
- * Tsailoring                                   nrf52_template/src/common/CMakeLists.txt
-
-
-
-
+    ninja sd_app        //生成集sd，app二合一的hex文件
+    ninja flashsdapp    //烧写集sd，app二合一的hex文件

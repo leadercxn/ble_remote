@@ -30,7 +30,9 @@ static void cmd_show_usage(nrf_cli_t const * p_cli, size_t argc, char **argv)
     nrf_cli_info(p_cli, "gpio     -- test the led "  );
     nrf_cli_info(p_cli, "bleping  -- ble ping test "  );
     nrf_cli_info(p_cli, "blepong  -- ble pong test "  );
+    nrf_cli_info(p_cli, "blectx   -- ble ctx test "  );
     nrf_cli_info(p_cli, "battery  -- get the battery volt "  );
+    nrf_cli_info(p_cli, "cache    -- enable/disable cache function "  );
 }
 
 #ifdef SUBG_CMD 

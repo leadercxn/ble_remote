@@ -15,6 +15,7 @@
 
 APP_TIMER_DEF(m_ble_ping_tx_timer);                     //创建一个定时器
 APP_TIMER_DEF(m_ble_ping_timeout_timer);                //创建一个定时器
+APP_TIMER_DEF(m_start_ble_tx);                //创建一个定时器
 
 static nrf_cli_t const *mp_cli = NULL ;                 //接收来自上一层传递的串口指针         
 static ble_radio_event_handler_t m_radio_event_handler;
@@ -59,7 +60,16 @@ static void ble_ping_timeout_handler(void * p_context)
     nrf_cli_info(mp_cli,"tx = %d, rx = %d", m_ping_tx_num, m_ping_rx_num);
     nrf_cli_info(mp_cli,"lost rate = %f", ((float)m_ping_tx_num - (float)m_ping_rx_num) / (float)m_ping_tx_num * 100);
     nrf_cli_info(mp_cli, "");
-    TIMER_START(m_ble_ping_tx_timer, 500);
+    TIMER_START(m_ble_ping_tx_timer, 1000);
+}
+
+/**
+ * @brief     
+ */
+static void start_ble_tx_handler(void * p_context)
+{
+    nrf_cli_info(mp_cli, "start_ble_tx_handler" );
+    ble_radio_tx_enable();
 }
 
 
@@ -133,6 +143,7 @@ void cmd_ble_ping_test(nrf_cli_t const * p_cli, size_t argc, char **argv)
     uint8_t   rx_mode = RADIO_MODE_MODE_Ble_1Mbit;
 
     mp_cli = p_cli ;        
+
 
     for(uint8_t i = 1; i < argc;)
     {
@@ -211,14 +222,19 @@ void cmd_ble_ping_test(nrf_cli_t const * p_cli, size_t argc, char **argv)
     m_ping_rx_config.mode    = rx_mode;
 
     m_radio_event_handler.on_event_end_handler = on_ble_radio_event_end_handler;
+
     ble_radio_init(&m_radio_event_handler);
     ble_radio_config_set(m_ping_tx_config);
     ble_radio_packet_set((uint8_t *)&m_tx_packet);
-    ble_radio_tx_enable();
+//    ble_radio_tx_enable();                //使用了命令缓存，会死在这里，所以延迟一定的时间再打开
     m_ble_ping_state = BLE_PING_STATE_TX;
+
 
     TIMER_CREATE(&m_ble_ping_tx_timer, APP_TIMER_MODE_SINGLE_SHOT, ble_ping_timer_tx_handler );          
     TIMER_CREATE(&m_ble_ping_timeout_timer, APP_TIMER_MODE_SINGLE_SHOT, ble_ping_timeout_handler );
+    TIMER_CREATE(&m_start_ble_tx, APP_TIMER_MODE_SINGLE_SHOT, start_ble_tx_handler );
+
+    TIMER_START(m_start_ble_tx, 500);
 
     nrf_cli_info(p_cli, "start ble tx ping test\n" );
     while(true)

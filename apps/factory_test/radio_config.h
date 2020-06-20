@@ -13,6 +13,7 @@ typedef struct
     uint8_t channel;
 } ble_radio_config_t;
 
+void ble_radio_const_carrier_configure(void);
 
 void ble_radio_disable(void);
 

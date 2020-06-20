@@ -10,6 +10,8 @@ project(nrf52_template LANGUAGES NONE)
 set(CMAKE_CONFIG_DIR "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_SOURCE_DIR ${CMAKE_SOURCE_DIR} CACHE STRING "" FORCE)
 
+string(TIMESTAMP BUILD_DATE "%Y%m%d%H%M")
+
 add_custom_target(pristine
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CONFIG_DIR}/pristine.cmake
 # Equivalent to rm -rf build/*
@@ -27,6 +29,7 @@ if (NOT SDK_ROOT)
     return()
 endif ()
 
+include("${CMAKE_CONFIG_DIR}/git.cmake")
 include("${CMAKE_CONFIG_DIR}/version.cmake")
 include("${CMAKE_CONFIG_DIR}/sdk/${nRF5_SDK_VERSION}.cmake")
 include("${CMAKE_CONFIG_DIR}/platform/${PLATFORM}.cmake")
@@ -38,6 +41,9 @@ message(STATUS "Arch: ${${PLATFORM}_ARCH}")
 message(STATUS "SoftDevice: ${SOFTDEVICE}")
 
 configure_file(version.h.in  ${CMAKE_SOURCE_DIR}/apps/app/config/version.h)
+
+set(SDK_BOOTLOADER_HEX_FILE  "${CMAKE_SOURCE_DIR}/apps/dfu/sdk_bootloader_hex/nrf52810_xxaa_s112.hex")
+set(KEY_FILE  "${CMAKE_SOURCE_DIR}/private.key")
 
 set(ARCH ${${PLATFORM}_ARCH})
 

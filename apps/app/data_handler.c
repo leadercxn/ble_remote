@@ -15,6 +15,8 @@
 #include "pb_decode.h"
 #include "pb_encode.h"
 #include "msgnode.pb.h"
+#include "ble_dfu.h"
+#include "nrf_drv_rng.h"
 
 #define ALPHA_TOOL_CFG_VERSION      0X05
 
@@ -105,6 +107,41 @@ void  scandata_encode( adv_enum_e adv_type  , uint8_t *scandata )
     NRF_LOG_HEXDUMP_DEBUG(scandata , index );     //打印数据
 }
 
+
+/**
+ * @brief       打包key特征的数据
+ * @param[in]   指向key特征的特征数据指针
+ */
+void key_char_attr_data_encode ( uint8_t *attr_data )
+{
+    static nrf_ecb_hal_data_t cc_ecb_data ;
+
+    uint16_t nonce ;
+    nrf_drv_rng_rand( (uint8_t *)&nonce , sizeof(uint16_t) );
+
+     NRF_LOG_INFO("nonce = 0x%04x "  , nonce );
+
+    memset( &cc_ecb_data , 0 , sizeof(nrf_ecb_hal_data_t) );                                    
+
+    memcpy( cc_ecb_data.cleartext , g_user_param.appSecureKey , sizeof(cc_ecb_data.cleartext)   );
+    memcpy( cc_ecb_data.key , &nonce , sizeof( uint16_t ) );
+    
+    sd_ecb_block_encrypt(&cc_ecb_data);
+
+    NRF_LOG_INFO("encrypt.ciphertext: " );
+    NRF_LOG_HEXDUMP_INFO(cc_ecb_data.ciphertext, sizeof(cc_ecb_data.ciphertext));           //打印数据
+
+    memcpy( attr_data , cc_ecb_data.ciphertext , sizeof(cc_ecb_data.ciphertext) );
+    memcpy( &attr_data[16] , &nonce , sizeof(uint16_t) );
+
+
+    //sd_ble_gatts_value_set(uint16_t conn_handle, uint16_t handle, ble_gatts_value_t *p_value);
+}
+
+
+
+
+
 /**
  * @brief 校验BLE发射功率的有效性
  */
@@ -171,6 +208,8 @@ static uint8_t msg_cfg_verify(MsgNode *p_msg)
 static void msg_cfg_handler(MsgNode *p_msg)
 {
     bool is_update_to_flash = false ;
+    bool is_fac_reset = false;
+    bool is_dfu = false;
     if( p_msg->has_bleParam )       //包含有ble的参数
     {
         if( p_msg->bleParam.has_bleInterval )
@@ -194,10 +233,44 @@ static void msg_cfg_handler(MsgNode *p_msg)
         }
     }
 
+    if(p_msg->has_appParam)
+    {
+        if(p_msg->appParam.has_cmd)
+        {
+            NRF_LOG_INFO("appParam.cmd = %d\n", p_msg->appParam.cmd);
+            switch(p_msg->appParam.cmd)
+            {
+                case AppCmd_APP_CMD_FAC_RESET:
+                    is_fac_reset = true;
+                    break;
+                case AppCmd_APP_CMD_DFU:
+                    is_dfu = true;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    }
+
     if( true == is_update_to_flash)     //数据更新到flash区
     {
         NRF_LOG_INFO("data update to flash, bleInterval =%d ,bleTxp =%d " , g_user_param.ble_int , g_user_param.ble_txp );
         user_param_store_iflash();
+    }
+
+    if(is_dfu)
+    {
+        is_dfu = false;
+        NRF_LOG_INFO("go into dfu bootloader\n " , g_user_param.ble_int , g_user_param.ble_txp );
+
+        uint32_t err_code;
+        err_code = ble_dfu_buttonless_bootloader_start_prepare();
+        if (err_code != NRF_SUCCESS)
+        {
+            NRF_LOG_INFO("dfu error \n"); 
+        }
+
     }
 
 }

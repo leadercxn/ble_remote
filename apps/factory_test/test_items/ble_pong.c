@@ -8,6 +8,7 @@
 #include "nrf_cli.h"
 #include "nrf_cli_types.h"
 #include "nrf_cli_uart.h"
+#include "cli.h"
 
 #include "radio_config.h"
 #include "pl_timer.h"
@@ -89,7 +90,7 @@ static void on_ble_radio_event_end_handler(void)
 /**
  * @brief 子命令pong 对应的执行函数 , argc是从子命令开始算的
  */
-void cmd_ble_pong_test(nrf_cli_t const * p_cli, size_t argc, char **argv)
+static void cmd_ble_pong_test(nrf_cli_t const * p_cli, size_t argc, char **argv)
 {
     
     uint8_t count = 0;

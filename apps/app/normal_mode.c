@@ -32,15 +32,16 @@ APP_TIMER_DEF(m_battery_timer);                                                 
 APP_TIMER_DEF(m_low_power_timer);                                               //创建一个低电压定时器
 
 
-#define USING_FOR_TEST    0                                                     //成功率测试宏
+#define USING_FOR_TEST   0                                                      //成功率测试宏
 #if ( USING_FOR_TEST == 1 )
-#define  ADV_MAX_CNT        1000                                                //广播次数
-#define  ADV_INTERVAL       1000                                              
+#define  ADV_MAX_CNT        200                                                 //广播次数
+#define  ADV_INTERVAL       2000                                              
 APP_TIMER_DEF(m_test_timer);                                                    //创建定时广播
 static uint16_t m_adv_cnt = 0 ;                                                 //广播计数
+uint8_t m_led_on_index = 0 ;
 #endif
 
-static uint16_t app_led_io[]= { STATUS_LED , };                                        //led io
+static uint16_t app_led_io[]= { STATUS_LED , };                                 //led io
 #define LED_TIMER_PERIOD            50                                          //控制led timer的周期宽度
 
 #define ADC_TIMER_PERIOD            (10*60*1000)
@@ -137,19 +138,26 @@ static void test_timer_handler(void * p_context)
         .led_pin = app_led_io[0],
         .active_level = 0 ,
         .is_blink = true ,
-        .led_on_time = 5,
-        .led_off_time = 5 ,
+        .led_on_time = 1,
+        .led_off_time = 1 ,
         .count_blink = 2,
     };
 
     m_adv_cnt++;
+#if 1
     if( m_adv_cnt > ADV_MAX_CNT )
     {
         TIMER_STOP(m_test_timer);
+        app_led_para.is_blink = 0 ;
+        err_code = led_on_control( app_led_para , &led_index );
+        m_led_on_index = led_index ; 
+        APP_ERROR_CHECK(err_code);
         return ;
     }
-                                    
-    advertising_encode_msg_data( GUARD_HOME_MSG );      //打包广播数据
+#endif 
+    g_adv_fnt++ ;    
+
+    advertising_encode_msg_data( GUARD_SET_MSG );      //打包广播数据
     advertising_start();                                //开启广播
     NRF_LOG_INFO("m_adv_cnt = %d" , m_adv_cnt );
 
@@ -206,9 +214,20 @@ void button_event_handler(uint8_t event)
             break;
         case BUTTON_EVENT_GUARD_SET:
                 adv_msg_type = GUARD_SET_MSG ;
+#if ( USING_FOR_TEST == 1 )
+    TIMER_START(m_test_timer , ADV_INTERVAL );
+    return ;
+#endif
             break;
         case BUTTON_EVENT_GUARD_CANCEL:
                 adv_msg_type = GUARD_CANCEL_MSG ;
+#if ( USING_FOR_TEST == 1 )
+    TIMER_STOP(m_test_timer);
+    m_adv_cnt = 0 ;
+    led_off_control(m_led_on_index);
+    APP_ERROR_CHECK(err_code);
+    return ;
+#endif
             break;
         case BUTTON_EVENT_PAIR:
                 adv_msg_type = PAIR_MSG ;
@@ -217,6 +236,8 @@ void button_event_handler(uint8_t event)
             adv_msg_type = NORMAL_MSG ;
             break;
     }
+
+    NRF_LOG_INFO("adv_msg_type = 0x%02x" , adv_msg_type );
 
     advertising_encode_msg_data( adv_msg_type );        //打包广播数据
     advertising_start();                                //开启广播
@@ -255,7 +276,7 @@ void idle_state_handle(void)
 void normal_mode(void)
 {
     ret_code_t err_code;
-
+    
     //参数初始化
     param_init();
 
@@ -277,8 +298,10 @@ void normal_mode(void)
 
     //电池检测初始化                                          
     battery_init();                                         
-    
 
+
+    NRF_LOG_INFO("GIT_VAR = %s " , GIT_VAR);
+    NRF_LOG_INFO("DATE_VAR = %s " , DATE_VAR);
     for (;;)
     {
         app_sched_execute();

@@ -2,10 +2,10 @@
 #define BOARD_REMOTE001_H
 
 
-#define GUARD_HOME_BUTTON       10      // 在家布防
-#define ALARM_SET_BUTTON        25      // 一键报警
-#define GUARD_SET_BUTTON        9       // 布防
-#define GUARD_CANCEL_BUTTON     28      // 撤防
+#define GUARD_HOME_BUTTON       9      // 在家布防
+#define ALARM_SET_BUTTON        28      // 一键报警
+#define GUARD_SET_BUTTON        10       // 布防
+#define GUARD_CANCEL_BUTTON     25      // 撤防
 
 #define STATUS_LED              20      // 状态指示灯1
 

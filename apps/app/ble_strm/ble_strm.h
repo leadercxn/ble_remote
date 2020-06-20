@@ -15,6 +15,9 @@
 #define STRM_UUID_TEST_CHAR                     0X0303
 #define STRM_UUID_CMD_CHAR                      0X0304
 #define STRM_UUID_VERSION_CHAR                  0X03FF
+#define STRM_UUID_KEY_CHAR                      0X03FE
+
+#define KEY_CHAR_ATTR_DATA_LEN                  18
 
 typedef enum
 {
@@ -25,6 +28,7 @@ typedef enum
     BLE_STRM_EVT_CMD_WRITE,
 
     BLE_STRM_EVT_DATA_READ,
+    BLE_STRM_EVT_KEY_READ,
 } ble_strm_evt_type_t;
 
 // Forward declaration of the ble_strm_t type.
@@ -50,7 +54,8 @@ typedef struct
     ble_strm_read_handler_t     read_handler;
     ble_strm_hvc_handler_t      hvc_handler;
     ble_srv_error_handler_t     error_handler;
-    uint8_t                   * version;
+    uint8_t                     *version;
+    uint8_t                     *key;          //新增密码的buff指针
 } ble_strm_init_t;
 
 
@@ -65,10 +70,14 @@ typedef struct ble_strm_s
     ble_gatts_char_handles_t     test_char_handle;
     ble_gatts_char_handles_t     cmd_char_handle;
 
+    ble_gatts_char_handles_t     version_char_handle;
+    ble_gatts_char_handles_t     key_char_handle;
+
     ble_strm_write_handler_t     write_handler;
     ble_strm_read_handler_t      read_handler;
     ble_strm_hvc_handler_t       hvc_handler;
     ble_srv_error_handler_t      error_handler;
+    uint8_t                     *key;
 } _ble_strm_s;
 
 

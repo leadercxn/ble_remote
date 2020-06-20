@@ -62,10 +62,9 @@ void aes_encrypt(void)
 {
     salt_padding();
 
-    memset( cc_ecb_data.key , 0 , sizeof(cc_ecb_data.key) );                                //key
-    memcpy( cc_ecb_data.key , g_user_param.appSecureKey , sizeof(cc_ecb_data.key)   );
+    memset( &cc_ecb_data , 0 , sizeof(nrf_ecb_hal_data_t) );                                //key
 
-    memset( cc_ecb_data.cleartext , 0 , sizeof(cc_ecb_data.cleartext) );                    //cleartext
+    memcpy( cc_ecb_data.key , g_user_param.appSecureKey , sizeof(cc_ecb_data.key)   );
     memcpy( cc_ecb_data.cleartext , m_salt , sizeof(cc_ecb_data.cleartext)   );
 
 

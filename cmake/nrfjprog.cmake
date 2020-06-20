@@ -1,34 +1,22 @@
-find_program(NRFJPROG
-    nrfjprog)
+find_program(NRFJPROG   nrfjprog)
+find_program(MERGEHEX   mergehex)
+find_program(NRFUTIL    nrfutil)
 
-find_program(MERGEHEX
-    mergehex)
 
-if (NRFJPROG AND MERGEHEX)
+if(NOT NRFJPROG)
+    message(FATAL_ERROR "Tool nrfjprog: not found")
+endif()
 
-    add_custom_target(merge)
-    add_custom_target(flash)
+if(NOT MERGEHEX)
+    message(FATAL_ERROR "Tool mergehex: not found")
+endif()
 
-    function(add_flash_target target)
-        # Both the manual <merge> and <flash> target and depends on
-        # the custom command that generates the merged hexfile.
-        add_custom_target(merge_${target}
-            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${target}_merged.hex)
+if(NOT NRFUTIL)
+    message(FATAL_ERROR "Tool nrfutil: not found")
+endif()
 
-        add_dependencies(merge merge_${target})
 
-        add_custom_target(flash_${target}
-            COMMAND ${NRFJPROG} -f ${${PLATFORM}_FAMILY} --program ${CMAKE_CURRENT_BINARY_DIR}/${target}_merged.hex --sectorerase --reset
-            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${target}_merged.hex)
-
-        add_dependencies(flash flash_${target})
-
-        add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${target}_merged.hex
-            COMMAND ${MERGEHEX} -m ${${SOFTDEVICE}_HEX_FILE} ${CMAKE_CURRENT_BINARY_DIR}/${target}.hex -o ${CMAKE_CURRENT_BINARY_DIR}/${target}_merged.hex
-            DEPENDS ${target}
-            VERBATIM)
-    endfunction(add_flash_target)
-
+if (NRFJPROG AND MERGEHEX AND NRFUTIL)
 
     add_custom_target(erase
         COMMAND ${NRFJPROG} -e)
@@ -36,14 +24,50 @@ if (NRFJPROG AND MERGEHEX)
     add_custom_target(sd
         COMMAND ${NRFJPROG} --program ${${SOFTDEVICE}_HEX_FILE} -f ${${PLATFORM}_FAMILY} --chiperase)
 
+    add_custom_target(bl
+        COMMAND ${NRFJPROG} --program ${SDK_BOOTLOADER_HEX_FILE} -f ${${PLATFORM}_FAMILY} --chiperase)
+
+    add_custom_target(merge
+        COMMAND ${NRFUTIL} settings generate --family NRF52810 --application ${CMAKE_BINARY_DIR}/apps/app/app.hex --application-version 1 --bootloader-version 1 --bl-settings-version 1 ${CMAKE_BINARY_DIR}/apps/app/bootloader_settings.hex
+        COMMAND ${MERGEHEX}  -m  ${${SOFTDEVICE}_HEX_FILE}  ${CMAKE_BINARY_DIR}/apps/app/app.hex  ${SDK_BOOTLOADER_HEX_FILE}  -o  ${CMAKE_BINARY_DIR}/apps/app/sd_app_bl.hex 
+        #COMMAND ${MERGEHEX}  -m  ${CMAKE_BINARY_DIR}/apps/app/sd_app_bl.hex  ${CMAKE_BINARY_DIR}/apps/app/bootloader_settings.hex  -o  ${CMAKE_BINARY_DIR}/apps/app/sd_app_bl_merge.hex
+        COMMAND ${MERGEHEX}  -m  ${CMAKE_BINARY_DIR}/apps/app/sd_app_bl.hex  ${CMAKE_BINARY_DIR}/apps/app/bootloader_settings.hex  -o  ${CMAKE_BINARY_DIR}/../firmware/SENSORO_SSS_CONTROLLER_1010_FW_${${target}_VERSION}_${BUILD_HASH}_${BUILD_DATE}.hex 
+        COMMAND rm               ${CMAKE_BINARY_DIR}/apps/app/sd_app_bl.hex
+        COMMAND rm               ${CMAKE_BINARY_DIR}/apps/app/bootloader_settings.hex)
+
+    #带变量的命令不能放在function外面，传参不了
+    #add_custom_target(flash_${target}              
+    #        COMMAND ${NRFJPROG} --program ${CMAKE_CURRENT_BINARY_DIR}/${target}.hex -f ${${PLATFORM}_FAMILY} --sectorerase --reset
+    #        DEPENDS ${target})
+
+    function(add_flash_target target)
+        # Flash target command
+        add_custom_target(flash_${target}           #烧录app
+            COMMAND ${NRFJPROG} --program ${CMAKE_CURRENT_BINARY_DIR}/${target}.hex -f ${${PLATFORM}_FAMILY} --sectorerase --reset
+            DEPENDS ${target})
+
+        add_custom_target(flash_sd_${target}        #烧录sd、app
+            COMMAND ${NRFJPROG} --program ${CMAKE_CURRENT_BINARY_DIR}/${target}.hex -f ${${PLATFORM}_FAMILY} --sectorerase --reset
+            DEPENDS sd ${target})           #先执行 目标为 sd 的命令
+    endfunction(add_flash_target)
+
+    add_custom_target(dfu_pkg  
+        COMMAND ${NRFUTIL} pkg generate --hw-version 52 --sd-req 0xCD --application-version 2 --application ${CMAKE_BINARY_DIR}/apps/app/app.hex  --key-file  ${KEY_FILE}   ${CMAKE_BINARY_DIR}/../firmware/SENSORO_SSS_CONTROLLER_1010_DFU_${${target}_VERSION}_${BUILD_HASH}_${BUILD_DATE}.zip )
+
+    add_custom_target(flash_merge    
+        COMMAND ${NRFJPROG} --program ${CMAKE_BINARY_DIR}/apps/app/sd_app_bl_merge.hex -f ${${PLATFORM}_FAMILY} --sectorerase --reset)
+
     add_custom_target(flashfac          
         COMMAND ${NRFJPROG} --program ${CMAKE_BINARY_DIR}/apps/factory_test/factory.hex -f ${${PLATFORM}_FAMILY} --sectorerase --reset)
 
     add_custom_target(flashapp
         COMMAND ${NRFJPROG} --program ${CMAKE_BINARY_DIR}/apps/app/app.hex -f ${${PLATFORM}_FAMILY} --sectorerase --reset)
 
-     add_custom_target(flashdfu
-        COMMAND ${NRFJPROG} --program ${CMAKE_BINARY_DIR}/apps/dfu/dfu.hex -f ${${PLATFORM}_FAMILY} --sectorerase --reset)
+    add_custom_target(sd_app
+        COMMAND ${MERGEHEX}  -m  ${${SOFTDEVICE}_HEX_FILE}  ${CMAKE_BINARY_DIR}/apps/app/app.hex  -o  ${CMAKE_BINARY_DIR}/apps/app/sd_app_merge.hex )
+
+    add_custom_target(flashsdapp
+        COMMAND ${NRFJPROG} --program ${CMAKE_BINARY_DIR}/apps/app/sd_app_merge.hex -f ${${PLATFORM}_FAMILY} --sectorerase --reset)
 
 else ()
     message(STATUS "Could not find nRFx command line tools (`nrfjprog` and `mergehex`).
@@ -52,4 +76,4 @@ else ()
     function(add_flash_target target)
         # Not supported
     endfunction(add_flash_target)
-endif (NRFJPROG AND MERGEHEX)
+endif (NRFJPROG AND MERGEHEX AND NRFUTIL)

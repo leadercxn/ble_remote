@@ -5906,7 +5906,7 @@
 // <2=> NRF_FSTORAGE_SD 
 
 #ifndef FDS_BACKEND
-#define FDS_BACKEND 2
+#define FDS_BACKEND 1
 #endif
 
 // </h> 
@@ -6666,7 +6666,7 @@
  
 
 #ifndef BUTTON_ENABLED
-#define BUTTON_ENABLED 1
+#define BUTTON_ENABLED 0
 #endif
 
 // <q> BUTTON_HIGH_ACCURACY_ENABLED  - Enables GPIOTE high accuracy for buttons

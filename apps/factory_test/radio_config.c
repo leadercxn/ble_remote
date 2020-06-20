@@ -63,6 +63,15 @@ void ble_radio_disable(void)
     NRF_RADIO->TASKS_RXEN = 0U;
 }
 
+void ble_radio_const_carrier_configure(void)
+{
+    NRF_CLOCK->EVENTS_HFCLKSTARTED  = 0;
+    NRF_CLOCK->TASKS_HFCLKSTART     = 1;
+
+    ble_radio_disable();
+
+    NRF_RADIO->SHORTS     = RADIO_SHORTS_READY_START_Msk;
+}
 
 
 static void ble_radio_config(void)

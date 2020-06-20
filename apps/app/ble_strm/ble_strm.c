@@ -14,6 +14,7 @@
 #include "app_error.h"
 
 #include "ble_strm.h"
+#include "nrf_log.h"
 
 static bool is_cccd_configured(ble_strm_t* p_strm, uint16_t cccd_handle)
 {
@@ -129,13 +130,17 @@ static void on_rw_auth_req(ble_strm_t* p_strm, ble_evt_t* p_ble_evt)
             /*Do nothing*/
         }
     }
-    else if(type == BLE_GATTS_AUTHORIZE_TYPE_READ)
+    else if(type == BLE_GATTS_AUTHORIZE_TYPE_READ)      //特性读
     {
         handle   = p_evt_read->handle;
 
         if(handle == p_strm->data_char_handle.value_handle)
         {
             p_strm->read_handler(p_strm, BLE_STRM_EVT_DATA_READ, handle);
+        }
+        else if(handle == p_strm->key_char_handle.value_handle)
+        {
+            p_strm->read_handler(p_strm, BLE_STRM_EVT_KEY_READ, handle);
         }
     }
     else
@@ -163,28 +168,32 @@ static void on_hvc(ble_strm_t* p_strm, ble_evt_t* p_ble_evt)
 
 void ble_strm_on_ble_evt(ble_strm_t* p_strm, ble_evt_t* p_ble_evt)
 {
-
     switch(p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
+            NRF_LOG_INFO("ble_strm ==> BLE_GAP_EVT_CONNECTED \n"); 
             on_connect(p_strm, p_ble_evt);
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
+            NRF_LOG_INFO("ble_strm ==> BLE_GAP_EVT_DISCONNECTED \n"); 
             on_disconnect(p_strm, p_ble_evt);
             break;
 
         case BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST :
+            NRF_LOG_INFO("ble_strm ==> BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST \n"); 
             on_rw_auth_req(p_strm, p_ble_evt);
             break;
 
         case BLE_GATTS_EVT_HVC:
+            NRF_LOG_INFO("ble_strm ==> BLE_GATTS_EVT_HVC \n"); 
             on_hvc(p_strm, p_ble_evt);
             break;
 
         default:
             break;
     }
+
 }
 
 /**@brief Add data characteristic.
@@ -286,9 +295,9 @@ static uint32_t strm_pwd_char_add(ble_strm_t* p_strm)
 
     attr_char_value.p_uuid       = &ble_uuid;
     attr_char_value.p_attr_md    = &attr_md;
-    attr_char_value.init_len     = 16;
-    attr_char_value.init_offs    = 0;
-    attr_char_value.max_len      = 16;
+    attr_char_value.init_len     = 16 ;
+    attr_char_value.init_offs    = 0  ;
+    attr_char_value.max_len      = 16 ;
 
 
     return sd_ble_gatts_characteristic_add(p_strm->service_handle, &char_md,
@@ -296,6 +305,8 @@ static uint32_t strm_pwd_char_add(ble_strm_t* p_strm)
                                            &p_strm->pwd_char_handle);
 }
 
+
+#if 0
 /**@brief Add test characteristic.
  *
  * @param[in]   p_strm        Service structure.
@@ -401,6 +412,7 @@ static uint32_t strm_cmd_char_add(ble_strm_t* p_strm)
                                            &p_strm->cmd_char_handle);
 }
 
+
 static uint32_t strm_version_char_add(ble_strm_t* p_strm, const ble_strm_init_t* p_strm_init)
 {
     ble_gatts_char_md_t char_md;
@@ -442,7 +454,54 @@ static uint32_t strm_version_char_add(ble_strm_t* p_strm, const ble_strm_init_t*
 
     return sd_ble_gatts_characteristic_add(p_strm->service_handle, &char_md,
                                            &attr_char_value,
-                                           &p_strm->cmd_char_handle);
+                                           &p_strm->version_char_handle);
+}
+#endif
+
+
+static uint32_t strm_key_char_add(ble_strm_t* p_strm, const ble_strm_init_t* p_strm_init)
+{
+    ble_gatts_char_md_t char_md;
+    ble_gatts_attr_t    attr_char_value;
+    ble_uuid_t          ble_uuid;
+    ble_gatts_attr_md_t attr_md;
+
+    memset(&char_md, 0, sizeof(char_md));
+
+    char_md.char_props.read     = 1;
+    char_md.char_props.write    = 0;
+    char_md.char_props.indicate = 0;
+    char_md.p_char_user_desc    = NULL;
+    char_md.p_char_pf           = NULL;
+    char_md.p_user_desc_md      = NULL;
+    char_md.p_cccd_md           = NULL;
+    char_md.p_sccd_md           = NULL;
+
+    ble_uuid.type = p_strm->uuid_type;
+    ble_uuid.uuid = STRM_UUID_KEY_CHAR;
+
+    memset(&attr_md, 0, sizeof(attr_md));
+
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
+
+    attr_md.vloc       = BLE_GATTS_VLOC_STACK;
+    attr_md.rd_auth    = 1;
+    attr_md.wr_auth    = 0;
+    attr_md.vlen       = 0;
+
+    memset(&attr_char_value, 0, sizeof(attr_char_value));
+
+    attr_char_value.p_uuid       = &ble_uuid;
+    attr_char_value.p_attr_md    = &attr_md;
+    attr_char_value.init_len     = KEY_CHAR_ATTR_DATA_LEN;
+    attr_char_value.init_offs    = 0;
+    attr_char_value.max_len      = KEY_CHAR_ATTR_DATA_LEN;
+    attr_char_value.p_value      = p_strm_init->key;
+
+    return sd_ble_gatts_characteristic_add(p_strm->service_handle, 
+                                           &char_md,
+                                           &attr_char_value,
+                                           &p_strm->key_char_handle);
 }
 
 uint32_t ble_strm_init(ble_strm_t* p_strm, const ble_strm_init_t* p_strm_init)
@@ -465,6 +524,7 @@ uint32_t ble_strm_init(ble_strm_t* p_strm, const ble_strm_init_t* p_strm_init)
     p_strm->read_handler        = p_strm_init->read_handler;
     p_strm->hvc_handler         = p_strm_init->hvc_handler;
     p_strm->error_handler       = p_strm_init->error_handler;
+    p_strm->key                 = p_strm_init->key ;
 
     service_uuid.type           = uuid_type;
     service_uuid.uuid           = STRM_UUID_SERVICE;
@@ -476,11 +536,14 @@ uint32_t ble_strm_init(ble_strm_t* p_strm, const ble_strm_init_t* p_strm_init)
     /*添加数据特征*/
     err_code = strm_data_char_add(p_strm);
     VERIFY_SUCCESS(err_code);
+    NRF_LOG_INFO("===>data handle = 0x%04x" , p_strm->data_char_handle.value_handle);
 
     /*添加密码特征*/
     err_code = strm_pwd_char_add(p_strm);
     VERIFY_SUCCESS(err_code);
+    NRF_LOG_INFO("===>pwd handle = 0x%04x" , p_strm->pwd_char_handle.value_handle);
 
+#if 0
     /*添加测试特征*/
     err_code = strm_test_char_add(p_strm);
     VERIFY_SUCCESS(err_code);
@@ -491,6 +554,12 @@ uint32_t ble_strm_init(ble_strm_t* p_strm, const ble_strm_init_t* p_strm_init)
 
     err_code = strm_version_char_add(p_strm, p_strm_init);
     VERIFY_SUCCESS(err_code);
+#endif
+
+    err_code = strm_key_char_add(p_strm, p_strm_init);
+    VERIFY_SUCCESS(err_code);
+
+    NRF_LOG_INFO("===>key handle = 0x%04x" , p_strm->key_char_handle.value_handle);
 
     return NRF_SUCCESS;
 }
@@ -537,3 +606,5 @@ uint32_t ble_strm_char_indicate(ble_strm_t*               p_strm,
     }
     return err_code;
 }
+
+

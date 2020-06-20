@@ -67,4 +67,12 @@ void ble_srv_strm_set_passwd(uint8_t* passwd, uint8_t len);
 
 void ble_srv_strm_rx_timer_init(void);
 
+
+/**
+ * @brief 
+ */
+uint16_t strm_key_char_value_handle_get(void);
+
+void key_pointer_register(uint8_t *p_key );
+
 #endif

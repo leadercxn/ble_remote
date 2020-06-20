@@ -1,5 +1,9 @@
-#set(target "template_${PLATFORM}_${SOFTDEVICE}")
 set(target "app")
+
+set(FW_TYPE "RELEASE" CACHE STRING "Type of firmware for build")
+set_property(CACHE FW_TYPE PROPERTY STRINGS "TEST" "RELEASE")
+
+message(STATUS "firmware type: ${FW_TYPE}")
 
 file(GLOB USER_SOURCE_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/main.c"
@@ -32,11 +36,8 @@ set(USER_INCLUDE_DIRS
 
 
 set(SDK_LIBRARY_SOURCE_FILES
- #   "${SDK_ROOT}/components/ble/ble_services/ble_lbs/ble_lbs.c"
- #   "${SDK_ROOT}/components/ble/ble_services/ble_lbs_c/ble_lbs_c.c"
     "${SDK_ROOT}/integration/nrfx/legacy/nrf_drv_clock.c"
     "${SDK_ROOT}/integration/nrfx/legacy/nrf_drv_rng.c"
- #   "${SDK_ROOT}/integration/nrfx/legacy/nrf_drv_uart.c"       #
     "${SDK_ROOT}/modules/nrfx/soc/nrfx_atomic.c"
     "${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_power.c"
     "${SDK_ROOT}/modules/nrfx/drivers/src/nrfx_clock.c"
@@ -267,8 +268,6 @@ set(SDK_EXTERNAL_SOURCE_FILES
     "${SDK_ROOT}/external/nano-pb/pb_encode.c"
     "${SDK_ROOT}/external/utf_converter/utf.c"
     "${SDK_ROOT}/external/segger_rtt/SEGGER_RTT.c"
-#    "${SDK_ROOT}/external/segger_rtt/SEGGER_RTT_Syscalls_GCC.c"    #这里最好加判断分支用哪个原文件
-#    "${SDK_ROOT}/external/segger_rtt/SEGGER_RTT_Syscalls_KEIL.c"
     "${SDK_ROOT}/external/segger_rtt/SEGGER_RTT_printf.c"
     CACHE INTERNAL ""
 )
@@ -348,12 +347,17 @@ elseif(TOOLCHAIN STREQUAL "armcc")
     -DFLOAT_ABI_HARD)
 endif()
 
+set(USER_DEFINITIONS
+    -D${FW_TYPE}
+    -DGIT_VAR="${BUILD_HASH}"
+    -DDATE_VAR="${BUILD_DATE}"
+)
+
 target_compile_definitions(${target} PUBLIC
     ${USER_DEFINITIONS}
     -DAPP_TIMER_V2
     -DAPP_TIMER_V2_RTC1_ENABLED
     -DBLE_STACK_SUPPORT_REQD
-#    -DBOARD_PCA10056
     -DBOARD_PCA10040
 #    -DBOARD_CUSTOM
     -DBLE_LBS
@@ -377,7 +381,5 @@ target_link_libraries(${target}
 
 create_hex(${target})
 add_flash_target(${target})
-
-get_property(target_include_dirs TARGET ${target} PROPERTY INCLUDE_DIRECTORIES)
 
 

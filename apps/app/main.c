@@ -133,16 +133,15 @@ int main(void)
 
     //flash初始化
     fstorage_init();
-
+    
     //协议栈初始化
     ble_stack_init();
 
     //电源管理模块初始化
     power_management_init();
 
-    NRF_LOG_INFO("APP_VERSION = 0x%04x " , APP_VERSION );
     NRF_LOG_INFO("APP_VERSION_BYTE = 0x%02x " , APP_VERSION_BYTE );
-    NRF_LOG_INFO("APP_VERSION_STR = %s " , APP_VERSION_STR );
+
 
     if( config_from_flash()  )       
     {
@@ -154,7 +153,6 @@ int main(void)
         NRF_LOG_INFO("go into factory");
         factory_mode();
     }
-    
 
 }
 

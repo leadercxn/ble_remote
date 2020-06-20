@@ -228,6 +228,3 @@ target_link_libraries(${target}
 create_hex(${target})
 add_flash_target(${target})
 
-get_property(target_include_dirs TARGET ${target} PROPERTY INCLUDE_DIRECTORIES)
-
-

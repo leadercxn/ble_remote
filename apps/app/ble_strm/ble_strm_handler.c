@@ -15,8 +15,8 @@
 #include "ble_hci.h"
 
 #include "ble_strm.h"
-
 #include "ble_strm_handler.h"
+#include "nrf_log.h"
 
 #define STRM_DATA_HEADER_LEN        2
 #define STRM_DATA_LENGTH_OFFSET     0
@@ -50,9 +50,11 @@ static strm_on_read_handler_t   m_on_read_handler = NULL;
 static strm_on_write_handler_t  m_on_write_handler = NULL;
 static strm_on_sent_handler_t   m_on_sent_handler = NULL;
 
+
 #define RX_TIMEOUT_TIME         10000
 APP_TIMER_DEF(m_rx_timer);
 
+static uint8_t *mp_key = NULL ;
 
 /**@brief 数据处理调度函数
  *
@@ -310,12 +312,22 @@ static void read_handler(ble_strm_t*           p_strm,
             }
             break;
 
+        case BLE_STRM_EVT_KEY_READ:             //密钥特性的读
+                reply.params.read.len            = KEY_CHAR_ATTR_DATA_LEN ;
+                reply.params.read.p_data         = p_strm->key ;
+
+                NRF_LOG_INFO("reply data : " );
+                NRF_LOG_HEXDUMP_INFO(reply.params.read.p_data, KEY_CHAR_ATTR_DATA_LEN);
+            break ;
+
         default:
             break;
     }
 
     err_code = sd_ble_gatts_rw_authorize_reply(p_strm->conn_handle, &reply);
     APP_ERROR_CHECK(err_code);
+
+
 
     if(is_data_rest)
     {
@@ -387,7 +399,7 @@ void ble_srv_strm_init(void)
     init.hvc_handler        = hvc_handler;
     init.error_handler      = NULL;
     // init.version            = (uint8_t *)FW_VERSION_FULL;
-
+    init.key                = mp_key;
     err_code = ble_strm_init(&m_strm, &init);
     APP_ERROR_CHECK(err_code);
 }
@@ -478,3 +490,21 @@ void ble_srv_strm_rx_timer_init(void)
 
     //    timer_create( &m_rx_timer, APP_TIMER_MODE_SINGLE_SHOT, strm_rx_timer_handler );
 }
+
+/**
+ * @brief 回去key特征的value_handle
+ */
+uint16_t strm_key_char_value_handle_get(void)
+{
+    return  m_strm.key_char_handle.value_handle ;
+}
+
+/**
+ * 获取上一层的的暗文指针 
+ */
+void key_pointer_register(uint8_t *p_key )
+{
+    mp_key = p_key ;
+}
+
+
